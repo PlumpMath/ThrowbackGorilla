@@ -1,5 +1,6 @@
 package com.pokeyone.throwbackgorilla;
 
+import com.pokeyone.throwbackgorilla.states.GameState;
 import com.pokeyone.throwbackgorilla.states.State;
 
 import javax.swing.*;
@@ -22,6 +23,10 @@ public class Game extends JPanel implements Runnable, KeyListener {
 
     public Game(){
         addKeyListener(this);
+
+        states = new State[]{
+                new GameState()
+        };
 
         thread = new Thread(this);
         thread.start();

@@ -46,7 +46,7 @@ public class Game extends JPanel implements Runnable, KeyListener {
         g.fillRect(0, 0, getWidth(), getHeight());
 
         //Render current state
-        states[currentState].paint(g, getWidth(), getHeight());
+        states[currentState].paint(g);
     }
 
     public void keyPressed(KeyEvent e){
@@ -67,7 +67,7 @@ public class Game extends JPanel implements Runnable, KeyListener {
             repaint();
 
             try{
-                Thread.sleep(5);
+                Thread.sleep(17);
             }catch(InterruptedException e){
                 e.printStackTrace();
             }

@@ -1,5 +1,7 @@
 package com.pokeyone.throwbackgorilla.states;
 
+import com.pokeyone.throwbackgorilla.*;
+import com.pokeyone.throwbackgorilla.Frame;
 import com.pokeyone.throwbackgorilla.entities.BoxEntity;
 import com.pokeyone.throwbackgorilla.entities.MainCharacter;
 import com.pokeyone.throwbackgorilla.resources.ResourceHandler;
@@ -8,6 +10,7 @@ import com.pokeyone.throwbackgorilla.resources.ResourceTileSet;
 import com.pokeyone.throwbackgorilla.resources.ResourceType;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Random;
@@ -25,24 +28,28 @@ public class GameState extends State {
     public static final String RES_BACKGROUND_NAME = "background";
     public static final String RES_BOX_TILESET_NAME = "box tileset";
 
-    public MainCharacter mainCharacter;
-    public ArrayList<BoxEntity> boxes;
+    private MainCharacter mainCharacter;
+    private ArrayList<BoxEntity> boxes;
 
-    //Main character last animation frame change
+    private Font boxLetterFont = new Font("Arial", Font.PLAIN, 36);
+
+    // Main character last animation frame change
     private Date mainCharacterLastFrame = new Date();
-    //Ground movement last animation frame change
+    // Ground movement last animation frame change
     private Date groundLastFrame = new Date();
     private double groundOffset = 0;
-    //box spawn last spawn
+    // box spawn last spawn
     private Date lastBoxSpawn = new Date();
-    //box frequency in milliseconds
+    // box frequency in milliseconds
     private int boxFrequency = 4000;
-    //number of boxes spawned
+    // number of boxes spawned
     private int boxCount = 0;
     // Minimum box frequency
     private int boxFreqStopThreshold = 750;
 
     public GameState(){
+        super(Frame.FRAME_WIDTH, Frame.FRAME_HEIGHT);
+
         resourceHandler = new ResourceHandler("res/");
         try {
             resourceHandler.addResource("Gorilla.png", RES_GORILLA_NAME, ResourceType.TILE_SET, 64, 64, 3);
@@ -60,7 +67,7 @@ public class GameState extends State {
     }
 
     public void tick(){
-        //Main Character Animation
+        // Main Character Animation
         if(new Date().getTime() - mainCharacterLastFrame.getTime() >= 250) {
             if (mainCharacter.currentImage == 0) {
                 mainCharacter.currentImage = 1;
@@ -80,10 +87,10 @@ public class GameState extends State {
         }
         groundLastFrame = new Date();
 
-        //Box spawning
+        // Box spawning
         if(new Date().getTime() - lastBoxSpawn.getTime() >= boxFrequency){
             System.out.println("BOX SPAWN!");
-            boxes.add(new BoxEntity(640));
+            boxes.add(new BoxEntity(640, stateHeight-128));
             boxCount++;
             lastBoxSpawn = new Date();
 
@@ -101,29 +108,39 @@ public class GameState extends State {
         }
 
         // Box Movement
-        if(boxes != null && !boxes.isEmpty())
-            for (BoxEntity box : boxes){
+        if(boxes != null && !boxes.isEmpty()) {
+            for (BoxEntity box : boxes) {
                 box.x -= newOff;
+                if (box.thrown)
+                    box.y -= newOff;
             }
+        }
     }
 
-    public void paint(Graphics g, int width, int height){
-        //Background
+    public void paint(Graphics g){
+        // Background
         g.drawImage(((ResourceImage)(resourceHandler.getResource("background"))).getImage(), 0, 0, 640, 480, null);
 
-        //Floor
-        for(int i = 0; i <= Math.ceil(width/64.0); i++){
-            g.drawImage(((ResourceImage)(resourceHandler.getResource("grass"))).getImage(), i * 64 - (int)groundOffset, height-64, null);
+        // Floor
+        for(int i = 0; i <= Math.ceil(stateWidth/64.0); i++){
+            g.drawImage(((ResourceImage)(resourceHandler.getResource("grass"))).getImage(), i * 64 - (int)groundOffset, stateHeight-64, null);
         }
 
-        //Main Character
-        g.drawImage(mainCharacter.getImage(), 0, height-mainCharacter.height-64, mainCharacter.width, mainCharacter.height, null);
+        // Main Character
+        g.drawImage(mainCharacter.getImage(), 0, stateHeight-mainCharacter.height-64, mainCharacter.width, mainCharacter.height, null);
 
-        //Boxes
+        // Boxes
+        g.setColor(Color.BLACK);
+        g.setFont(boxLetterFont);
+        g.getFontMetrics(boxLetterFont);
+
+
         if(boxes != null && !boxes.isEmpty())
             for (BoxEntity box : boxes){
-                g.drawImage(box.getImage(), (int)box.x, height-box.height-64, box.width, box.height, null);
+                g.drawImage(box.getImage(), (int)box.x, (int)box.y, box.width, box.height, null);
+                g.drawString(KeyEvent.getKeyText(box.keyCodes[box.letter]), (int)box.x, (int)box.y);
             }
+
     }
 
     public void keyPressed(int keyCode){

@@ -9,6 +9,9 @@ public class Frame extends JFrame {
 
     JPanel game = new Game();
 
+    public static final int FRAME_WIDTH = 640;
+    public static final int FRAME_HEIGHT = 480;
+
     public Frame(){
         setSize(640, 480);
         setResizable(false);

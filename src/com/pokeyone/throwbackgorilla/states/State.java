@@ -7,13 +7,18 @@ import java.awt.*;
  */
 public abstract class State {
 
+    public int stateWidth, stateHeight;
+
+    public State(int width, int height){
+        this.stateWidth = width;
+        this.stateHeight = height;
+    }
+
     /**
-     * Renders visuals for the state to the graphics object given, with the width and height given
+     * Renders visuals for the state to the graphics object given
      * @param g The graphics object to render to
-     * @param width The width of the window
-     * @param height The height of the window
      */
-    public abstract void paint(Graphics g, int width, int height);
+    public abstract void paint(Graphics g);
 
     /**
      * Does all the processing before each frame

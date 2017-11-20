@@ -1,6 +1,8 @@
 package com.pokeyone.throwbackgorilla.states;
 
+import javax.swing.*;
 import java.awt.*;
+import java.util.HashMap;
 
 /**
  * A basic state of the game that handles user input and output
@@ -25,16 +27,6 @@ public abstract class State {
      */
     public abstract void tick();
 
-
-    /**
-     * Processes a key press
-     * @param keyCode The key code of the key pressed gotten through KeyEvent.getKeyCode()
-     */
-    public abstract void keyPressed(int keyCode);
-
-    /**
-     * Processes a key release
-     * @param keyCode The key code of the key pressed gotten through KeyEvent.getKeyCode()
-     */
-    public abstract void keyReleased(int keyCode);
+    public abstract InputMap getInputMap();
+    public abstract ActionMap getActionMap();
 }

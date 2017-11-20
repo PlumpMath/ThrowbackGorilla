@@ -3,16 +3,21 @@ package com.pokeyone.throwbackgorilla.states;
 import com.pokeyone.throwbackgorilla.*;
 import com.pokeyone.throwbackgorilla.Frame;
 import com.pokeyone.throwbackgorilla.entities.BoxEntity;
+import com.pokeyone.throwbackgorilla.entities.Entity;
 import com.pokeyone.throwbackgorilla.entities.MainCharacter;
 import com.pokeyone.throwbackgorilla.resources.ResourceHandler;
 import com.pokeyone.throwbackgorilla.resources.ResourceImage;
 import com.pokeyone.throwbackgorilla.resources.ResourceTileSet;
 import com.pokeyone.throwbackgorilla.resources.ResourceType;
 
+import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Random;
 
 /**
@@ -21,6 +26,10 @@ import java.util.Random;
 public class GameState extends State {
 
     Random random = new Random();
+
+    private HashMap<Integer, Boolean> keys;
+    private InputMap inputMap;
+    private ActionMap actionMap;
 
     public static ResourceHandler resourceHandler;
     public static final String RES_GORILLA_NAME = "gorilla";
@@ -50,6 +59,13 @@ public class GameState extends State {
     public GameState(){
         super(Frame.FRAME_WIDTH, Frame.FRAME_HEIGHT);
 
+        // Initialize keys map
+        keys = new HashMap<>();
+        for (int keycode : BoxEntity.keyCodes) {
+            keys.put(keycode, false);
+        }
+
+        // Initialize resource handler and resources
         resourceHandler = new ResourceHandler("res/");
         try {
             resourceHandler.addResource("Gorilla.png", RES_GORILLA_NAME, ResourceType.TILE_SET, 64, 64, 3);
@@ -62,13 +78,42 @@ public class GameState extends State {
             System.exit(1);
         }
 
+        // Init entities
         mainCharacter = new MainCharacter("George", 96, 96, RES_GORILLA_NAME);
         boxes = new ArrayList<>();
+
+        // Init input and action maps
+        inputMap = new InputMap();
+        actionMap = new ActionMap();
+        for (int keyCode : BoxEntity.keyCodes) {
+            inputMap.put(KeyStroke.getKeyStroke(keyCode, 0), "keyPress" + keyCode);
+            inputMap.put(KeyStroke.getKeyStroke(keyCode, 0, true), "keyReleased" + keyCode);
+
+            actionMap.put("keyPress" + keyCode, new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    keys.put(keyCode, true);
+                    System.out.println("Key Press " + keyCode);
+                }
+            });
+
+            actionMap.put("keyReleased" + keyCode, new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    keys.put(keyCode, false);
+                    System.out.println("Key Release " + keyCode);
+                }
+            });
+        }
+
     }
 
     public void tick(){
         // Main Character Animation
         if(new Date().getTime() - mainCharacterLastFrame.getTime() >= 250) {
+            if (mainCharacter.currentImage == 2){
+                mainCharacter.currentImage = 0;
+            }
             if (mainCharacter.currentImage == 0) {
                 mainCharacter.currentImage = 1;
             } else {
@@ -107,12 +152,28 @@ public class GameState extends State {
             }
         }
 
-        // Box Movement
+        // Box Movement & Collision
         if(boxes != null && !boxes.isEmpty()) {
             for (BoxEntity box : boxes) {
                 box.x -= newOff;
-                if (box.thrown)
-                    box.y -= newOff;
+                if (box.thrown) {
+                    box.y -= newOff*3;
+                    box.x -= newOff;
+                }
+
+                if (box.x < 64 && !box.thrown) {
+                    if (keys.get(BoxEntity.keyCodes[box.letter]) != null && keys.get(BoxEntity.keyCodes[box.letter])) {
+                        box.thrown = true;
+                        mainCharacter.currentImage = 2;
+                        mainCharacterLastFrame = new Date();
+                    }else{
+                        endgame();
+                    }
+                }
+
+                if (box.x < 0) {
+                    boxes.remove(box);
+                }
             }
         }
     }
@@ -143,11 +204,16 @@ public class GameState extends State {
 
     }
 
-    public void keyPressed(int keyCode){
-
+    public InputMap getInputMap(){
+        return inputMap;
     }
 
-    public void keyReleased(int keyCode){
+    public ActionMap getActionMap(){
+        return actionMap;
+    }
 
+    public void endgame(){
+        System.out.println("FAILURE");
+        //TODO: transfer to score screen
     }
 }

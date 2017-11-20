@@ -11,7 +11,7 @@ import java.awt.event.KeyListener;
 /**
  * Created by pokeyone on 2017-11-02.
  */
-public class Game extends JPanel implements Runnable, KeyListener {
+public class Game extends JPanel implements Runnable {
 
     private boolean running = true;
     private Thread thread;
@@ -22,11 +22,14 @@ public class Game extends JPanel implements Runnable, KeyListener {
     private int currentState = 0;
 
     public Game(){
-        addKeyListener(this);
+        setFocusable(true);
 
         states = new State[]{
                 new GameState()
         };
+
+        setInputMap(JPanel.WHEN_FOCUSED, states[0].getInputMap());
+        setActionMap(states[0].getActionMap());
 
         thread = new Thread(this);
         thread.start();
@@ -47,18 +50,6 @@ public class Game extends JPanel implements Runnable, KeyListener {
 
         //Render current state
         states[currentState].paint(g);
-    }
-
-    public void keyPressed(KeyEvent e){
-        states[currentState].keyPressed(e.getKeyCode());
-    }
-
-    public void keyReleased(KeyEvent e){
-        states[currentState].keyReleased(e.getKeyCode());
-    }
-
-    public void keyTyped(KeyEvent e){
-
     }
 
     public void run(){

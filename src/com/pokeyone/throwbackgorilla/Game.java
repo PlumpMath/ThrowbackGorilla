@@ -29,6 +29,7 @@ public class Game extends JPanel implements Runnable {
         };
 
         setInputMap(JPanel.WHEN_FOCUSED, states[0].getInputMap());
+        setInputMap(JPanel.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT, states[0].getInputMap());
         setActionMap(states[0].getActionMap());
 
         thread = new Thread(this);

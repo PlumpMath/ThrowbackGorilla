@@ -14,7 +14,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -55,6 +54,8 @@ public class GameState extends State {
     private int boxCount = 0;
     // Minimum box frequency
     private int boxFreqStopThreshold = 750;
+    // Whether or not game is paused
+    private boolean paused = false;
 
     public GameState(){
         super(Frame.FRAME_WIDTH, Frame.FRAME_HEIGHT);
@@ -71,7 +72,7 @@ public class GameState extends State {
             resourceHandler.addResource("Gorilla.png", RES_GORILLA_NAME, ResourceType.TILE_SET, 64, 64, 3);
             resourceHandler.addResource("grass.png", RES_GRASS_NAME, ResourceType.IMAGE);
             resourceHandler.addResource("background.png", RES_BACKGROUND_NAME, ResourceType.IMAGE);
-            resourceHandler.addResource("boxes.png", RES_BOX_TILESET_NAME, ResourceType.TILE_SET, 64, 64, 3);
+            resourceHandler.addResource("boxes.png", RES_BOX_TILESET_NAME, ResourceType.TILE_SET, 64, 64, 4);
             resourceHandler.loadAll();
         }catch(Exception e){
             e.printStackTrace();
@@ -109,86 +110,88 @@ public class GameState extends State {
     }
 
     public void tick(){
-        // Main Character Animation
-        if(new Date().getTime() - mainCharacterLastFrame.getTime() >= 250) {
-            if (mainCharacter.currentImage == 2){
-                mainCharacter.currentImage = 0;
-            }
-            if (mainCharacter.currentImage == 0) {
-                mainCharacter.currentImage = 1;
-            } else {
-                mainCharacter.currentImage = 0;
-            }
-
-            mainCharacterLastFrame = new Date();
-        }
-
-        // Ground Offset Movement
-        double newOff = (new Date().getTime() - groundLastFrame.getTime())/10.0;
-        groundOffset += newOff;
-
-        if(groundOffset >= 64){
-            groundOffset = 0.0;
-        }
-        groundLastFrame = new Date();
-
-        // Box spawning
-        if(new Date().getTime() - lastBoxSpawn.getTime() >= boxFrequency){
-            System.out.println("BOX SPAWN!");
-            boxes.add(new BoxEntity(640, stateHeight-128));
-            boxCount++;
-            lastBoxSpawn = new Date();
-
-            if(boxFrequency > boxFreqStopThreshold) {
-                int bound = 106;
-                if (boxCount < 25) {
-                    bound = 6 + boxCount * 4;
+        if (!paused) {
+            // Main Character Animation
+            if (new Date().getTime() - mainCharacterLastFrame.getTime() >= 250) {
+                if (mainCharacter.currentImage == 2) {
+                    mainCharacter.currentImage = 0;
                 }
-                int rand = random.nextInt(bound);
-                int additioner = (rand - (3 + boxCount * 3));
-                boxFrequency += additioner;
-                System.out.println(boxFrequency + " boop " + additioner);
-                if(boxFrequency < boxFreqStopThreshold) boxFrequency = boxFreqStopThreshold;
-            }
-        }
-
-        // Box Movement & Collision
-        if(boxes != null && !boxes.isEmpty()) {
-            for (BoxEntity box : boxes) {
-                box.x -= newOff;
-                if (box.thrown) {
-                    box.y -= newOff*3;
-                    box.x -= newOff;
+                if (mainCharacter.currentImage == 0) {
+                    mainCharacter.currentImage = 1;
+                } else {
+                    mainCharacter.currentImage = 0;
                 }
 
-                if (box.x < 64 && !box.thrown) {
-                    if (keys.get(BoxEntity.keyCodes[box.letter]) != null && keys.get(BoxEntity.keyCodes[box.letter])) {
-                        box.thrown = true;
-                        mainCharacter.currentImage = 2;
-                        mainCharacterLastFrame = new Date();
-                    }else{
-                        endgame();
+                mainCharacterLastFrame = new Date();
+            }
+
+            // Ground Offset Movement
+            double newOff = (new Date().getTime() - groundLastFrame.getTime()) / 10.0;
+            groundOffset += newOff;
+
+            if (groundOffset >= 64) {
+                groundOffset = 0.0;
+            }
+            groundLastFrame = new Date();
+
+            // Box spawning
+            if (new Date().getTime() - lastBoxSpawn.getTime() >= boxFrequency) {
+                System.out.println("BOX SPAWN!");
+                boxes.add(new BoxEntity(640, stateHeight - 128));
+                boxCount++;
+                lastBoxSpawn = new Date();
+
+                if (boxFrequency > boxFreqStopThreshold) {
+                    int bound = 106;
+                    if (boxCount < 25) {
+                        bound = 6 + boxCount * 4;
                     }
+                    int rand = random.nextInt(bound);
+                    int additioner = (rand - (3 + boxCount * 3));
+                    boxFrequency += additioner;
+                    System.out.println(boxFrequency + " boop " + additioner);
+                    if (boxFrequency < boxFreqStopThreshold) boxFrequency = boxFreqStopThreshold;
                 }
+            }
 
-                if (box.x < 0) {
-                    boxes.remove(box);
+            // Box Movement & Collision
+            if (boxes != null && !boxes.isEmpty()) {
+                for (BoxEntity box : boxes) {
+                    box.x -= newOff;
+                    if (box.thrown) {
+                        box.y -= newOff * 3;
+                        box.x -= newOff;
+                    }
+
+                    if (box.x < 64 && !box.thrown) {
+                        if (keys.get(BoxEntity.keyCodes[box.letter]) != null && keys.get(BoxEntity.keyCodes[box.letter])) {
+                            box.thrown = true;
+                            mainCharacter.currentImage = 2;
+                            mainCharacterLastFrame = new Date();
+                        } else {
+                            endgame();
+                        }
+                    }
+
+                    if (box.x < 0) {
+                        boxes.remove(box);
+                    }
                 }
             }
         }
     }
 
-    public void paint(Graphics g){
+    public void paint(Graphics g) {
         // Background
-        g.drawImage(((ResourceImage)(resourceHandler.getResource("background"))).getImage(), 0, 0, 640, 480, null);
+        g.drawImage(((ResourceImage) (resourceHandler.getResource("background"))).getImage(), 0, 0, 640, 480, null);
 
         // Floor
-        for(int i = 0; i <= Math.ceil(stateWidth/64.0); i++){
-            g.drawImage(((ResourceImage)(resourceHandler.getResource("grass"))).getImage(), i * 64 - (int)groundOffset, stateHeight-64, null);
+        for (int i = 0; i <= Math.ceil(stateWidth / 64.0); i++) {
+            g.drawImage(((ResourceImage) (resourceHandler.getResource("grass"))).getImage(), i * 64 - (int) groundOffset, stateHeight - 64, null);
         }
 
         // Main Character
-        g.drawImage(mainCharacter.getImage(), 0, stateHeight-mainCharacter.height-64, mainCharacter.width, mainCharacter.height, null);
+        g.drawImage(mainCharacter.getImage(), 0, stateHeight - mainCharacter.height - 64, mainCharacter.width, mainCharacter.height, null);
 
         // Boxes
         g.setColor(Color.BLACK);
@@ -196,12 +199,20 @@ public class GameState extends State {
         g.getFontMetrics(boxLetterFont);
 
 
-        if(boxes != null && !boxes.isEmpty())
-            for (BoxEntity box : boxes){
-                g.drawImage(box.getImage(), (int)box.x, (int)box.y, box.width, box.height, null);
-                g.drawString(KeyEvent.getKeyText(box.keyCodes[box.letter]), (int)box.x, (int)box.y);
+        if (boxes != null && !boxes.isEmpty()){
+            for (BoxEntity box : boxes) {
+                g.drawImage(box.getImage(), (int) box.x, (int) box.y, box.width, box.height, null);
+                g.drawString(KeyEvent.getKeyText(box.keyCodes[box.letter]), (int) box.x, (int) box.y);
             }
+        }
 
+
+        if (paused) {
+            g.setColor(new Color(0, 0, 0, 128));
+            g.fillRect(0, 0, stateWidth, stateHeight);
+            g.setColor(Color.WHITE);
+            g.drawString("Paused", stateWidth/2, stateHeight/2);
+        }
     }
 
     public InputMap getInputMap(){

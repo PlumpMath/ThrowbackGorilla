@@ -27,8 +27,8 @@ public class GameState extends State {
     Random random = new Random();
 
     private HashMap<Integer, Boolean> keys;
-    private InputMap inputMap;
-    private ActionMap actionMap;
+    //private InputMap inputMap;
+    //private ActionMap actionMap;
 
     public static ResourceHandler resourceHandler;
     public static final String RES_GORILLA_NAME = "gorilla";
@@ -58,7 +58,7 @@ public class GameState extends State {
     private boolean paused = false;
 
     public GameState(){
-        super(Frame.FRAME_WIDTH, Frame.FRAME_HEIGHT);
+        super(Frame.FRAME_WIDTH, Frame.FRAME_HEIGHT, "game");
 
         // Initialize keys map
         keys = new HashMap<>();
@@ -66,23 +66,11 @@ public class GameState extends State {
             keys.put(keycode, false);
         }
 
-        // Initialize resource handler and resources
-        resourceHandler = new ResourceHandler("res/");
-        try {
-            resourceHandler.addResource("Gorilla.png", RES_GORILLA_NAME, ResourceType.TILE_SET, 64, 64, 3);
-            resourceHandler.addResource("grass.png", RES_GRASS_NAME, ResourceType.IMAGE);
-            resourceHandler.addResource("background.png", RES_BACKGROUND_NAME, ResourceType.IMAGE);
-            resourceHandler.addResource("boxes.png", RES_BOX_TILESET_NAME, ResourceType.TILE_SET, 64, 64, 4);
-            resourceHandler.loadAll();
-        }catch(Exception e){
-            e.printStackTrace();
-            System.exit(1);
-        }
-
         // Init entities
         mainCharacter = new MainCharacter("George", 96, 96, RES_GORILLA_NAME);
         boxes = new ArrayList<>();
 
+        /*
         // Init input and action maps
         inputMap = new InputMap();
         actionMap = new ActionMap();
@@ -106,7 +94,12 @@ public class GameState extends State {
                 }
             });
         }
+        */
 
+    }
+
+    public void onSwitch(){
+        lastBoxSpawn = new Date();
     }
 
     public void tick(){
@@ -156,25 +149,19 @@ public class GameState extends State {
 
             // Box Movement & Collision
             if (boxes != null && !boxes.isEmpty()) {
-                for (BoxEntity box : boxes) {
-                    box.x -= newOff;
-                    if (box.thrown) {
-                        box.y -= newOff * 3;
-                        box.x -= newOff;
+                for (int i = 0; i < boxes.size(); i++) {
+                    boxes.get(i).x -= newOff;
+                    if (boxes.get(i).thrown) {
+                        boxes.get(i).y -= newOff * 3;
+                        boxes.get(i).x -= newOff;
                     }
 
-                    if (box.x < 64 && !box.thrown) {
-                        if (keys.get(BoxEntity.keyCodes[box.letter]) != null && keys.get(BoxEntity.keyCodes[box.letter])) {
-                            box.thrown = true;
-                            mainCharacter.currentImage = 2;
-                            mainCharacterLastFrame = new Date();
-                        } else {
-                            endgame();
-                        }
+                    if (boxes.get(i).x < 64 && !boxes.get(i).thrown) {
+                        endgame();
                     }
 
-                    if (box.x < 0) {
-                        boxes.remove(box);
+                    if (boxes.get(i).x < 0) {
+                        boxes.remove(i);
                     }
                 }
             }
@@ -200,9 +187,13 @@ public class GameState extends State {
 
 
         if (boxes != null && !boxes.isEmpty()){
-            for (BoxEntity box : boxes) {
-                g.drawImage(box.getImage(), (int) box.x, (int) box.y, box.width, box.height, null);
-                g.drawString(KeyEvent.getKeyText(box.keyCodes[box.letter]), (int) box.x, (int) box.y);
+            for (int i = 0; i < boxes.size(); i++) {
+                g.drawImage(boxes.get(i).getImage(), (int) boxes.get(i).x, (int) boxes.get(i).y, boxes.get(i).width, boxes.get(i).height, null);
+                if(mainCharacter.currentImage == 0) {
+                    g.drawString(boxes.get(i).getRenderText(), (int) boxes.get(i).x, (int) boxes.get(i).y);
+                }else{
+                    g.drawString(boxes.get(i).getRenderText().replace('|', ':'), (int) boxes.get(i).x, (int) boxes.get(i).y);
+                }
             }
         }
 
@@ -215,12 +206,28 @@ public class GameState extends State {
         }
     }
 
+    /*
     public InputMap getInputMap(){
         return inputMap;
     }
 
     public ActionMap getActionMap(){
         return actionMap;
+    }
+    */
+
+    public void keyPressed(KeyEvent e){
+        for (int i = 0; i < boxes.size(); i++) {
+            if(boxes.get(i).getText().charAt(boxes.get(i).currentProgress) == e.getKeyCode()){
+                boxes.get(i).currentProgress++;
+                if(boxes.get(i).currentProgress >= boxes.get(i).letters.length){
+                    boxes.get(i).thrown = true;
+                }
+            }
+        }
+    }
+
+    public void keyReleased(KeyEvent e){
     }
 
     public void endgame(){

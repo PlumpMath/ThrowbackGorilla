@@ -15,7 +15,14 @@ public class BoxEntity extends Entity {
     private int imageID = 0;
     public boolean thrown = false;
 
-    public int letter;
+    public int currentProgress = 0;
+    /**
+     * Index of the letter in the keyCodes array
+     */
+    public int[] letters;
+    /**
+     * Array of available keyCode for generation
+     */
     public static final int[] keyCodes = {
             KeyEvent.VK_A,
             KeyEvent.VK_B,
@@ -53,7 +60,41 @@ public class BoxEntity extends Entity {
         imageID = random.nextInt(GameState.resourceHandler.getTileSet(this.imageName).count);
         this.x = x;
         this.y = y;
-        letter = random.nextInt(keyCodes.length);
+        letters = new int[random.nextInt(4) + 1];
+        for (int i = 0; i < letters.length; i++) {
+            letters[i] = random.nextInt(keyCodes.length);
+        }
+    }
+
+    /**
+     * Converts the array of letter indexes into a string of characters
+     * @return String containing letter indexes converted
+     */
+    public String getText() {
+        String str = "";
+
+        for(int i = 0; i < letters.length; i++){
+            str += KeyEvent.getKeyText(keyCodes[letters[i]]);
+        }
+
+        return str;
+    }
+
+    /**
+     * Same as getText(), but adds "|" at where the current progress is
+     * @return String containing letter indexes converted, with "|" as cursor
+     */
+    public String getRenderText(){
+        String str = "";
+
+        for(int i = 0; i < letters.length; i++){
+            if(i == currentProgress){
+                str += "|";
+            }
+            str += KeyEvent.getKeyText(keyCodes[letters[i]]);
+        }
+
+        return str;
     }
 
     public BufferedImage getImage() {

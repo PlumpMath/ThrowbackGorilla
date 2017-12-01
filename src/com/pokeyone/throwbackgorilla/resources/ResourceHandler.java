@@ -53,4 +53,8 @@ public class ResourceHandler {
             }
         }
     }
+
+    public void unloadAll(){
+        //TODO: unload in future for possible ram boost, but probably not needed for game of this caliber
+    }
 }

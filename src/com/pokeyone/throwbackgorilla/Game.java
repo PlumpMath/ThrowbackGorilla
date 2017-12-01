@@ -2,9 +2,7 @@ package com.pokeyone.throwbackgorilla;
 
 import com.pokeyone.throwbackgorilla.resources.ResourceHandler;
 import com.pokeyone.throwbackgorilla.resources.ResourceType;
-import com.pokeyone.throwbackgorilla.states.GameState;
-import com.pokeyone.throwbackgorilla.states.MenuState;
-import com.pokeyone.throwbackgorilla.states.State;
+import com.pokeyone.throwbackgorilla.states.*;
 import com.pokeyone.throwbackgorilla.ui.MenuOption;
 
 import javax.swing.*;
@@ -43,7 +41,9 @@ public class Game extends JPanel implements Runnable, KeyListener {
 
         states = new State[]{
                 new MenuState("Throwback Gorilla", "start", new MenuOption("PLAY", "game"), new MenuOption("QUIT", "exit")),
-                new GameState()
+                new GameState(),
+                new ScoreState(),
+                new ExitState()
         };
 
         addKeyListener(this);

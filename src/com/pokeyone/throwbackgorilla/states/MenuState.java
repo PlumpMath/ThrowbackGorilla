@@ -18,14 +18,18 @@ public class MenuState extends State {
     public MenuOption[] options;
     private int currentOption = 0;
 
-    private final Font titleFont = new Font("Ariel", Font.BOLD, 48);
-    private final Font optionFont = new Font("Ariel", Font.BOLD, 28);
+    public static final Font titleFont = new Font("Ariel", Font.BOLD, 48);
+    public static final Font optionFont = new Font("Ariel", Font.BOLD, 28);
 
     public MenuState(String title, String stateName, MenuOption... options){
         super(Frame.FRAME_WIDTH, Frame.FRAME_HEIGHT, stateName);
 
         this.title = title;
         this.options = options;
+    }
+
+    public void onSwitch(){
+        super.onSwitch();
     }
 
     public void paint(Graphics g) {
@@ -40,7 +44,7 @@ public class MenuState extends State {
         for(int i = 0; i < options.length; i++){
             if(i == currentOption){
                 g.setColor(Color.RED);
-                g.drawString(options[i].name, 200, i * 30 + 200);
+                g.drawString("> " + options[i].name, 200, i * 30 + 200);
                 g.setColor(Color.WHITE);
             }else{
                 g.drawString(options[i].name, 200, i * 30 + 200);

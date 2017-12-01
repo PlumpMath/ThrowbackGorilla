@@ -57,6 +57,8 @@ public class GameState extends State {
     // Whether or not game is paused
     private boolean paused = false;
 
+    public static int score = 0;
+
     public GameState(){
         super(Frame.FRAME_WIDTH, Frame.FRAME_HEIGHT, "game");
 
@@ -69,37 +71,26 @@ public class GameState extends State {
         // Init entities
         mainCharacter = new MainCharacter("George", 96, 96, RES_GORILLA_NAME);
         boxes = new ArrayList<>();
-
-        /*
-        // Init input and action maps
-        inputMap = new InputMap();
-        actionMap = new ActionMap();
-        for (int keyCode : BoxEntity.keyCodes) {
-            inputMap.put(KeyStroke.getKeyStroke(keyCode, 0), "keyPress" + keyCode);
-            inputMap.put(KeyStroke.getKeyStroke(keyCode, 0, true), "keyReleased" + keyCode);
-
-            actionMap.put("keyPress" + keyCode, new AbstractAction() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    keys.put(keyCode, true);
-                    System.out.println("Key Press " + keyCode);
-                }
-            });
-
-            actionMap.put("keyReleased" + keyCode, new AbstractAction() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    keys.put(keyCode, false);
-                    System.out.println("Key Release " + keyCode);
-                }
-            });
-        }
-        */
-
     }
 
     public void onSwitch(){
+        super.onSwitch();
+
         lastBoxSpawn = new Date();
+        boxFrequency = 4000;
+        boxCount = 0;
+        score = 0;
+        paused = false;
+
+        // Initialize keys map
+        keys = new HashMap<>();
+        for (int keycode : BoxEntity.keyCodes) {
+            keys.put(keycode, false);
+        }
+
+        // Init entities
+        mainCharacter = new MainCharacter("George", 96, 96, RES_GORILLA_NAME);
+        boxes = new ArrayList<>();
     }
 
     public void tick(){
@@ -156,6 +147,12 @@ public class GameState extends State {
                         boxes.get(i).x -= newOff;
                     }
 
+                    if(boxes.get(i).isDunTyped && !boxes.get(i).thrown && boxes.get(i).x < 64){
+                        boxes.get(i).thrown = true;
+                        mainCharacter.currentImage = 2;
+                        mainCharacterLastFrame = new Date();
+                    }
+
                     if (boxes.get(i).x < 64 && !boxes.get(i).thrown) {
                         endgame();
                     }
@@ -189,7 +186,11 @@ public class GameState extends State {
         if (boxes != null && !boxes.isEmpty()){
             for (int i = 0; i < boxes.size(); i++) {
                 g.drawImage(boxes.get(i).getImage(), (int) boxes.get(i).x, (int) boxes.get(i).y, boxes.get(i).width, boxes.get(i).height, null);
-                if(mainCharacter.currentImage == 0) {
+                if(boxes.get(i).isDunTyped){
+                    g.setColor(new Color(252, 227, 35));
+                    g.drawString(boxes.get(i).getRenderText(), (int) boxes.get(i).x, (int) boxes.get(i).y);
+                    g.setColor(Color.BLACK);
+                }else if(mainCharacter.currentImage == 0) {
                     g.drawString(boxes.get(i).getRenderText(), (int) boxes.get(i).x, (int) boxes.get(i).y);
                 }else{
                     g.drawString(boxes.get(i).getRenderText().replace('|', ':'), (int) boxes.get(i).x, (int) boxes.get(i).y);
@@ -197,6 +198,7 @@ public class GameState extends State {
             }
         }
 
+        g.drawString("" + score, 10, 50);
 
         if (paused) {
             g.setColor(new Color(0, 0, 0, 128));
@@ -218,10 +220,12 @@ public class GameState extends State {
 
     public void keyPressed(KeyEvent e){
         for (int i = 0; i < boxes.size(); i++) {
+            if(!boxes.get(i).isDunTyped)
             if(boxes.get(i).getText().charAt(boxes.get(i).currentProgress) == e.getKeyCode()){
                 boxes.get(i).currentProgress++;
                 if(boxes.get(i).currentProgress >= boxes.get(i).letters.length){
-                    boxes.get(i).thrown = true;
+                    boxes.get(i).isDunTyped = true;
+                    score += boxCount * (int)(boxes.get(i).letters.length * 1.5);
                 }
             }
         }
@@ -232,6 +236,7 @@ public class GameState extends State {
 
     public void endgame(){
         System.out.println("FAILURE");
-        //TODO: transfer to score screen
+        System.out.println("Final score: " + score);
+        changeState = "score";
     }
 }

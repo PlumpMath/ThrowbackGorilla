@@ -38,7 +38,7 @@ public abstract class State {
     /**
      * Called when state is brought into view
      */
-    public void onSwitch(){};
+    public void onSwitch(){changeState = "none";}
 
     /**
      * Renders visuals for the state to the graphics object given

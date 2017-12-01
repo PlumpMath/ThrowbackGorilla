@@ -14,6 +14,7 @@ public class BoxEntity extends Entity {
     private Random random = new Random();
     private int imageID = 0;
     public boolean thrown = false;
+    public boolean isDunTyped = false;
 
     public int currentProgress = 0;
     /**
@@ -50,6 +51,7 @@ public class BoxEntity extends Entity {
             KeyEvent.VK_X,
             KeyEvent.VK_Y,
             KeyEvent.VK_Z
+            //TODO: add numbers AND characters for HARD MODE!!!!
     };
 
     public double x;
